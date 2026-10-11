@@ -18,7 +18,7 @@ npm run dev
 Open the local URL printed by Vite, usually:
 
 ```text
-http://127.0.0.1:5173
+http://127.0.0.1:4173/
 ```
 
 The first start initializes `norware.sqlite3` and imports the sample catalog and warehouse locations. Existing SQLite data is retained. To use a separate database, set `NORWARE_DB_PATH` before starting the server.
