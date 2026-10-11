@@ -2,7 +2,7 @@
 
 Smart Slots is a local warehouse operations demo. The active app uses **React**, **Tailwind CSS**, **TanStack Start**, and **SQLite**. It supports inventory receiving, product search, shelf-fit suggestions, staff-confirmed allocation, warehouse capacity views, stock movements, guided transfers, and an audit log.
 
-The app is designed for local demonstration and development, not public or production deployment.
+The app is designed for local demonstration and development, not production deployment.
 
 ## Run the app
 
@@ -73,7 +73,7 @@ Waste streams, restrictions, storage profiles, and allowed roles are configured 
 
 ## Configuration
 
-The app listens on loopback in development. Common environment variables:
+The app listens on loopback in development. On Vercel, the app uses a temporary SQLite database in `/tmp` because the deployment filesystem is read-only. Database changes are not durable across serverless instances or deployments; use this only for a disposable demo. Common environment variables:
 
 ```bash
 export NORWARE_DB_PATH=/path/to/norware.sqlite3
@@ -86,7 +86,7 @@ The assistant provides local deterministic responses and does not require an API
 
 ## Sample data and PostgreSQL deliverable
 
-The application uses the SQLite database for live local workflows. The CSV catalog contains synthetic generated examples; it is not real supplier inventory. The generated CSV data can be rebuilt and checked with:
+The application uses SQLite for live workflows. On Vercel, the SQLite database is temporary and may differ between serverless instances. The CSV catalog contains synthetic generated examples; it is not real supplier inventory. The generated CSV data can be rebuilt and checked with:
 
 ```bash
 python3 generate_data.py

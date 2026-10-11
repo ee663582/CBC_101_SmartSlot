@@ -1,18 +1,31 @@
 import Database from 'better-sqlite3'
 import { parse } from 'csv-parse/sync'
 import { randomBytes, pbkdf2Sync } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { mkdtempSync, rmSync } from 'node:fs'
+import productsCsv from '../../products.csv?raw'
+import locationsCsv from '../../locations.csv?raw'
+import warehousesCsv from '../../warehouses.csv?raw'
+import defaultWasteConfig from '../../waste_config.json'
 
 export const rootDir = process.cwd()
-export const dbPath = resolve(process.env.NORWARE_DB_PATH || resolve(rootDir, 'norware.sqlite3'))
+const defaultDbPath = process.env.VERCEL
+  ? resolve(tmpdir(), 'smart-slots.sqlite3')
+  : resolve(rootDir, 'norware.sqlite3')
+export const dbPath = resolve(process.env.NORWARE_DB_PATH || defaultDbPath)
 export type Db = Database.Database
+const sampleCsv: Record<string, string> = {
+  'products.csv': productsCsv,
+  'locations.csv': locationsCsv,
+  'warehouses.csv': warehousesCsv,
+}
 
 export const wasteStreams: Array<{ category: string; storage: string; restricted: boolean; roles: string[] }> = (() => {
-  const configPath = resolve(process.env.NORWARE_WASTE_CONFIG || resolve(rootDir, 'waste_config.json'))
-  const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as { waste_streams?: typeof wasteStreams }
+  const parsed = process.env.NORWARE_WASTE_CONFIG
+    ? JSON.parse(readFileSync(resolve(process.env.NORWARE_WASTE_CONFIG), 'utf8')) as { waste_streams?: typeof wasteStreams }
+    : defaultWasteConfig as { waste_streams?: typeof wasteStreams }
   if (!Array.isArray(parsed.waste_streams) || parsed.waste_streams.length === 0) {
     throw new Error('Waste configuration must define a non-empty waste_streams list.')
   }
@@ -29,9 +42,9 @@ function passwordHash(password: string, salt = randomBytes(16)) {
 }
 
 function csvRows<T>(name: string): T[] {
-  const csvPath = resolve(rootDir, name)
-  if (!existsSync(csvPath)) throw new Error(`Required sample file is missing: ${name}`)
-  return parse(readFileSync(csvPath), { columns: true, skip_empty_lines: true }) as T[]
+  const csv = sampleCsv[name]
+  if (csv === undefined) throw new Error(`Required sample file is missing: ${name}`)
+  return parse(csv, { columns: true, skip_empty_lines: true }) as T[]
 }
 
 function initializeSchema(db: Db) {
